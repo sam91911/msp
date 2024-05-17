@@ -338,7 +338,7 @@ class sp:
             return
         etype = self.etype[name]
         if etype == "R":
-            return (state[0][self.R[name][0]]-state[0][self.R[name][1]])/self.R[name][2]
+            return (state[0][self.r[name][0]]-state[0][self.r[name][1]])/self.r[name][2]
         if etype == "C":
             return state[1][name]
         if etype == "L":
