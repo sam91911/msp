@@ -2,3 +2,4 @@
 ## dependency
  - numpy
  - copy
+ - tqdm
