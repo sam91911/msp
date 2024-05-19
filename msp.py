@@ -316,25 +316,29 @@ class sp:
         for x in self.edep:
             it = self.esrc[x]
             if it[0] in self.vdep[it[1]]:
-                self.Ae[it[0], it[3]] += it[2]
-                self.Ae[it[0], it[4]] -= it[2]
+                self.Ae[it[0], ::] += it[2]*self.Ae[it[3], ::]
+                self.Ae[it[0], ::] -= it[2]*self.Ae[it[4], ::]
                 for y in self.vdep[it[0]]:
-                    self.Ae[y, it[3]] += it[2]
-                    self.Ae[y, it[4]] -= it[2]
+                    self.Ae[y, ::] += it[2]*self.Ae[it[3], ::]
+                    self.Ae[y, ::] -= it[2]*self.Ae[it[4], ::]
             else:
-                self.Ae[it[1], it[3]] -= it[2]
-                self.Ae[it[1], it[4]] += it[2]
+                self.Ae[it[1], ::] -= it[2]*self.Ae[it[3], ::]
+                self.Ae[it[1], ::] += it[2]*self.Ae[it[4], ::]
                 for y in self.vdep[it[1]]:
-                    self.Ae[y, it[3]] -= it[2]
-                    self.Ae[y, it[4]] += it[2]
+                    self.Ae[y, ::] -= it[2]*self.Ae[it[3], ::]
+                    self.Ae[y, ::] += it[2]*self.Ae[it[4], ::]
         self.Ve = np.zeros((len(self.nodes), self.nlen))
         for x in self.esrc.values():
             if x[1] in self.vdep[x[0]]:
-                for y in self.vdep[x[0]]:
+                self.Ve[x[1], self.nmap[x[3]]] -= x[2]
+                self.Ve[x[1], self.nmap[x[4]]] += x[2]
+                for y in self.vdep[x[1]]:
                     self.Ve[y, self.nmap[x[3]]] -= x[2]
                     self.Ve[y, self.nmap[x[4]]] += x[2]
             else:
-                for y in self.vdep[x[1]]:
+                self.Ve[x[0], self.nmap[x[3]]] += x[2]
+                self.Ve[x[0], self.nmap[x[4]]] -= x[2]
+                for y in self.vdep[x[0]]:
                     self.Ve[y, self.nmap[x[3]]] += x[2]
                     self.Ve[y, self.nmap[x[4]]] -= x[2]
         self.Iid = np.zeros((self.nlen,))
@@ -663,6 +667,39 @@ class sp:
             self.isrc[name][2] = value
             return
         if etype == "E":
+            src = self.esrc[name][0]
+            dst = self.esrc[name][1]
+            dvalue = value-self.esrc[name][2]
+            np = self.esrc[name][3]
+            nn = self.esrc[name][4]
+            if dst in self.vdep[src]:
+                self.Ve[dst, self.nmap[np]] -= dvalue
+                self.Ve[dst, self.nmap[nn]] += dvalue
+                for y in self.vdep[dst]:
+                    self.Ve[y, self.nmap[np]] -= dvalue
+                    self.Ve[y, self.nmap[nn]] += dvalue
+            else:
+                self.Ve[src, self.nmap[np]] += dvalue
+                self.Ve[src, self.nmap[nn]] -= dvalue
+                for y in self.vdep[src]:
+                    self.Ve[y, self.nmap[np]] += dvalue
+                    self.Ve[y, self.nmap[nn]] -= dvalue
+            self.esrc[name][2] = value
+            self.Ae = np.identity(len(self.nodes))
+            for x in self.edep:
+                it = self.esrc[x]
+                if it[0] in self.vdep[it[1]]:
+                    self.Ae[it[0], ::] += it[2]*self.Ae[it[3], ::]
+                    self.Ae[it[0], ::] -= it[2]*self.Ae[it[4], ::]
+                    for y in self.vdep[it[0]]:
+                        self.Ae[y, ::] += it[2]*self.Ae[it[3], ::]
+                        self.Ae[y, ::] -= it[2]*self.Ae[it[4], ::]
+                else:
+                    self.Ae[it[1], ::] -= it[2]*self.Ae[it[3], ::]
+                    self.Ae[it[1], ::] += it[2]*self.Ae[it[4], ::]
+                    for y in self.vdep[it[1]]:
+                        self.Ae[y, ::] -= it[2]*self.Ae[it[3], ::]
+                        self.Ae[y, ::] += it[2]*self.Ae[it[4], ::]
             return
         if etype == "G":
             src = self.gsrc[name][0]
